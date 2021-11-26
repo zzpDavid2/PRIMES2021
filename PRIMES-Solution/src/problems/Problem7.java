@@ -5,9 +5,10 @@ import java.util.*;
 import helpers.*;
 import java.awt.*;
 
-public class Problem6 {
+public class Problem7 {
 
-	private HashMap<Character, String> table = new HashMap<Character, String> ();
+	static HashMap<String, Character> table = new HashMap<String, Character> ();
+	private HashMap<Character, Double> map = new HashMap<Character, Double>();
 	private Scanner fileNameSc = new Scanner(System.in);
 	private File inputText;
 	private File inputTable;
@@ -15,11 +16,11 @@ public class Problem6 {
 	
 	public static void main(String[] args) throws IOException {
 		
-		Problem6 p6 = new Problem6();
+		Problem7 p7 = new Problem7();
 		
-		p6.input();
-		
-		p6.output();
+		p7.input();
+
+		p7.output();
 	}
 
 	private void input() throws IOException {
@@ -35,34 +36,36 @@ public class Problem6 {
 		while(tableSc.hasNext()) {
 			char c = tableSc.next().charAt(0);
 			String code = tableSc.next();
-			table.put(c,code);
+			table.put(code, c);
 		}
 		tableSc.close();
 		
+		//Prompting for output file
 		System.out.println("Please enter the output file name.");
 		outputText = new File(fileNameSc.next());
 	}
 	
 	private void output() throws IOException {
-		//setting up file reader
+		//setting up files
 		FileReader fr = new FileReader(inputText);
 		PrintWriter out = new PrintWriter(outputText);
-
-		//encoding original text into compressed code
+		
+		//decoding
+		String data = "";	
 		for(int i = fr.read(); i !=-1; i = fr.read()) {
-			char c =  Character.toLowerCase((char) i);
-			if(table.containsKey(c)) {
-				String next = table.get(c);
-				out.print(next);
-			} 
-			
-//			System.out.println(next);
+			data += (char) i;
+			if(table.containsKey(data)) {
+				System.out.print(table.get(data));
+
+				out.print(table.get(data));
+				data = "";
+			}
 
 		}
+		System.out.println();
 		
 		fr.close();
-		out.close();
+		out.close(); 
 		System.out.println("Outputed to " + outputText + ".");
 	}
-
 }

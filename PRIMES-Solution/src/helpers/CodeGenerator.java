@@ -1,86 +1,71 @@
-package problems;
+// this program generates Huffman code from text file to use as test data
+package helpers;
 
 import java.io.*;
 import java.util.*;
 import helpers.*;
 import java.awt.*;
 
-public class Problem4 {
-	//Array that stores all the branches so that they can be sorted for output.
+public class CodeGenerator {
+
 	private ArrayList<Branch<Character>> branches = new ArrayList<Branch<Character>> ();
-	
-	//map that stores the frequency of each character
 	private HashMap<Character, Double> map = new HashMap<Character, Double>();
-	
-	private Scanner fileNameSc = new Scanner(System.in);
+	private File inputFile;
+	private String inputFileName;
+	private File outputFile;
 	
 	public static void main(String[] args) throws IOException {
 		
-		Problem4 p4 = new Problem4();
+		CodeGenerator cg = new CodeGenerator();
 		
-		p4.input();
+		cg.input();
 		
-		p4.createCode();
+		cg.createCode();
 		
-		p4.output();
+		cg.output();
 	}
 
 	private void input() throws IOException {
-	    //Prompting for input file
-		System.out.println("Please enter the input file name:");
-		File inputFile = new File(fileNameSc.next());
-		
-		Scanner sc=new Scanner(inputFile);
+//		file selector
+		FileDialog inputDialog = new FileDialog((Frame)null, "Select Input File");
+	    inputDialog.setMode(FileDialog.LOAD);
+	    inputDialog.setVisible(true);
+	    
+	    String fileDir = inputDialog.getDirectory();
+	    inputFileName = inputDialog.getFile();
+	    
+	    String inputFilePath = fileDir+inputFileName;
+	    System.out.println( inputFilePath + " chosen.");
+	    
+		inputFile = new File(inputFilePath);
+	
+		//create file reader
+		FileReader fr = new FileReader(inputFile);
 		
 		//create frequency map
-		double total=0; //variable for summing the frequencies.
-		double n =0; //number of characters
-
-		while (sc.hasNext()) {
-			//inputs
-			double frequency; // Temporary variable that stores the frequency
-			char character = sc.next().charAt(0);
-			
-			//checks if the file have ended
-			if(sc.hasNextInt()) {
-				frequency = (double) sc.nextInt();
+		for(int i = fr.read(); i !=-1; i = fr.read()) {
+			char c = (char) i;
+			if(map.containsKey(c)) {
+				map.put(c, map.get(c)+1);
 			}else {
-				frequency = sc.nextDouble();
+				map.put(c, 1.0);
 			}
-			
-//			System.out.println(character + " " + frequency);
-			//put data into map
-			map.put(character, frequency);
-			total+=frequency; //add to total percentage
-			n++; //add count to total characters
-	      }
-		sc.close();
-		
-		n*=0.005;//each input could introduce maximum of 0.005 rounding error since they are rounded to the hundredth.
-		
-//		System.out.println(total);
-		
-		//check if total percentages add to 100% with a margin for rounding error.
-		if(total>=100+n||total<=100-n) {
-			System.out.println("The total persentage does not add up to 100%. Sum: "+ total);
 		}
-//		for(Map.Entry<Character, Integer> entry : map.entrySet()) {
-//			System.out.println("Key : " + entry.getKey() + " Value : " + entry.getValue());
-//		}
 		
-		sc.close();
+		fr.close();
 	}
 	
 	private void createCode() {
-		//creates a custom priority to create the tree
-		MyPriorityQueue<Branch<Character>> pq = new MyPriorityQueue<Branch<Character>>();
-		
-		//put map into priority queue
+MyPriorityQueue<Branch<Character>> pq = new MyPriorityQueue<Branch<Character>>();
+		//put map in priority queue
 		for(Character element : map.keySet()) {
 			Branch<Character> b = new Branch<Character>(element);
 			pq.add(b, map.get(element));
 			branches.add(b);
 		}	
+		
+//		System.out.println(pq);	
+		//put node of end mark in pq
 		
 		//create tree with pq
 		while(pq.size()>2) {
@@ -100,10 +85,11 @@ public class Problem4 {
 			Branch<Character> parent = new Branch<Character>(left, right);
 			pq.add(parent, p);
 		}	
-		
-		//collecting codes from the built tree
+		//collecting the built tree
 		Branch<Character> root = new Branch<Character>(pq.popFront(),pq.popFront());	
-		triverse(root,""); //recursive function that creates the code table
+		
+		//recursive function that creates the code table
+		triverse(root,"");
 		
 	}
 	
@@ -141,11 +127,22 @@ public class Problem4 {
 	    });
 	    
 	    System.out.println(branches);
-
-	    //prompt for file name and creates the output file
+	    
+	    //finding the most appropriate name for the output file
+	    //this does work, but not perfectly, when the input file has no extension, which is good enough
+	    int index=inputFileName.lastIndexOf(".");
+	    String FileName = "";
+	    if(index!=-1) FileName =  inputFileName.substring(0,index);
+	    
+//	    file dialog prompts for saving the output file
+	    FileDialog outputDialog = new FileDialog((Frame)null, "Select Output File Path");
+	    outputDialog.setMode(FileDialog.SAVE);
+	    outputDialog.setFile(FileName + "_encoding.txt");
+	    outputDialog.setVisible(true);
+	    
+	    //creates the output file
 		System.out.println("Please enter the output file name:");
-		File outputFile = new File(fileNameSc.next());
-		fileNameSc.close();
+		outputFile = new File(outputDialog.getFile());
 		
 	    //writes in the output file
 	    PrintWriter out = new PrintWriter(outputFile);
