@@ -10,12 +10,18 @@ public class WordEditGenerator {
 		lg = new LetterGenerator();
 	}
 	
+	public static void main(String[] args) throws FileNotFoundException {
+		WordEditGenerator weg = new WordEditGenerator();
+		for(int i=0; i<100;i++) {
+			System.out.println(weg.generate(i));
+		}
+	}
+	
 	public String generate(int M) {
 		String op="";
 		
 		//determine randomized character number
 		Integer characterNumber = (int) (Math.random()*M);
-		op += characterNumber.toString();
 		
 		//determines randomized operation
 		int operation = (int) (Math.random()*3);
@@ -29,14 +35,20 @@ public class WordEditGenerator {
 //		System.out.print(operation);
 		if(operation ==0) {
 			//replace
-			op += " R";
+			op += "R";
+			op += " " + characterNumber.toString();
+			op += " " + word.length();
 			op += " " + word;
 		}else if (operation ==1) {
 			//delete
-			op += " D";
+			op += "D";
+			op += " " + characterNumber.toString();
+			op += " " + word.length();
 		}else {
 			//add
-			op += " A";
+			op += "A";
+			op += " " + characterNumber.toString();
+			op += " " + word.length();
 			op += " " + word;
 		}
 		
