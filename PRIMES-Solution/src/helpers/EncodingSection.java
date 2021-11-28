@@ -7,25 +7,24 @@ public class EncodingSection {
 	public int binaryLength;
 	public int charCount;
 	
-	public EncodingSection(int sl, int l) {
+	public EncodingSection(int sl, int l, int cc) {
 		isNew = false;
 		startLocation = sl;
 		binaryLength = l;
+		charCount = cc;
 	}
 	
-	public EncodingSection(String s) {
+	public EncodingSection(String s, int bl) {
 		isNew = true;
-		content =s;
-		binaryLength = 
+		content = s;
+		binaryLength = bl;
 		charCount = s.length();
 	}
 	
-	public static int findCharCount() {
-		
-	}
-	
-	public static int findBinaryLength() {
-		
+	public String toString() {
+		return content + " " + ((Integer) startLocation).toString() 
+				+ " " + ((Integer) binaryLength).toString() 
+				+ " " + ((Integer) charCount).toString();
 	}
 	
 }

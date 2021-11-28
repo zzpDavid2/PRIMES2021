@@ -27,9 +27,10 @@ public class Edit {
 			isWord = false;
 			location = sc.nextInt();
 			command = sc.next().charAt(0);
+			length = 1;
 			if(sc.hasNext()) {
 				content = sc.next();
-				length=content.length();
+				length = content.length();
 			}
 
 		}else {
@@ -37,7 +38,6 @@ public class Edit {
 			isWord = true;
 			command = sc.next().charAt(0);
 			location = sc.nextInt();
-			length = sc.nextInt();
 			if(sc.hasNext()) {
 				content = sc.next();
 			}
