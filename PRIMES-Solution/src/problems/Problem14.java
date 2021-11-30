@@ -25,8 +25,8 @@ public class Problem14 {
 	private File outputText;
 	
 	private String memory;
-	private char[] memorySim; // an alternate representation of the memory to allow out of current length memory access 
-	
+	private char[] memorySim; // an more realistic representation of the memory to allow for location based memory access 
+
 	private LinkedList<EncodingSection> sectionData = new LinkedList<EncodingSection>();
 	
 	private Deque<Edit> edits = new ArrayDeque<Edit>();
@@ -51,6 +51,8 @@ public class Problem14 {
 		
 		p14.processEdit();
 		
+		p14.outputToFile();
+		
 		p14.efficiencyReport();
 	}
 	
@@ -74,8 +76,8 @@ public class Problem14 {
 //		outputText = new File(fileNameSc.next());
 		
 		inputTable = new File("14_table.txt");
-		inputText = new File("14.1_text.txt");
-		inputEdit = new File("14.1_command.txt");
+		inputText = new File("14.3_text.txt");
+		inputEdit = new File("14.3.4_command.txt");
 		outputText = new File("14.1_op.txt");
 	}
 	
@@ -119,8 +121,6 @@ public class Problem14 {
 		
 		System.out.println(memory);
 		
-		memorySim = memory.toCharArray();
-		
 		maxMemoryAllowed = memory.length()/20;
 	}
 	
@@ -151,19 +151,19 @@ public class Problem14 {
 			
 			if(e.command == 'd' || e.command == 'D') {
 				// delete command
-				delete(e.location, e.length);
+				delete(e.location, e.deleteLength);
 			}else if(e.command == 'a' || e.command == 'A' ) {
 				// add command
 				add(e.location, e.length, e.content);
 			}else {
 				//replace command
-				delete(e.location, e.length);
+				delete(e.location, e.deleteLength);
 				add(e.location, e.length, e.content);
 			}
 			
 			stackCount ++;
 			
-			if(stackCount == 5) {
+			if(stackCount >= 5) {
 				commit();
 				stackCount = 0;
 			}
@@ -176,10 +176,11 @@ public class Problem14 {
 		
 		commit();
 		
+		System.out.println(memory);
 	}
 	
-	private void delete(int sl, int l) {
-		
+	private void delete(int sl, int dl) {
+		// inputs sl: start location, dl: delete length
 		int currIndex=0;
 		
 		LinkedList<EncodingSection> tempData = (LinkedList<EncodingSection>) sectionData.clone();
@@ -192,7 +193,7 @@ public class Problem14 {
 			int sectionEnd = currIndex + es.charCount - 1;
 			
 			int deleteStart = sl;
-			int deleteEnd = sl + l - 1;
+			int deleteEnd = sl + dl - 1;
 			
 			if(deleteEnd < sectionStart || sectionEnd < deleteStart ){
 				// the delete command does not interfere with the current section
@@ -207,11 +208,15 @@ public class Problem14 {
 				
 			}else if(sectionStart < deleteStart && deleteEnd < sectionEnd) {
 				//inserts a new section to become the split section on the right
-				int Nl = sectionEnd - deleteStart + 1;
-				EncodingSection leftSection = removeRightSection(es, Nl);
+				int Nr = sectionEnd - deleteStart + 1;
+				EncodingSection leftSection = removeRightSection(es, Nr);
 				
-				int Nr = deleteEnd - sectionStart + 1;
-				EncodingSection rightSection = removeLeftSection(es, Nr);
+				int Nl = deleteEnd - sectionStart + 1;
+				EncodingSection rightSection = removeLeftSection(es, Nl);
+				
+				System.out.println(deleteStart);
+				System.out.println(deleteEnd);
+				System.out.println(Nl);
 				
 				sectionData.remove(llIndex);
 				sectionData.add(llIndex, rightSection);
@@ -279,13 +284,6 @@ public class Problem14 {
 			currIndex += es.charCount;
 		}
 		sectionData.add(addedSection);
-	}
-	
-	private void commit() {
-
-//		for() {
-//			
-//		}
 	}
 	
 	private EncodingSection removeLeftSection(EncodingSection es, int N) {
@@ -386,6 +384,146 @@ public class Problem14 {
 		op++; // moves op to the start of the nth character
 		
 		return op;
+	}
+	
+	ArrayList<Integer> originals;
+	ArrayList<Target> targets;
+	
+	private void commit() {
+		
+		memorySim = memory.toCharArray();
+		
+		originals = new ArrayList<Integer>();
+		
+		ArrayList<Integer> originals = new ArrayList<Integer>();
+		
+		// add all original sections to the array
+		for(int i=0; i< sectionData.size(); i++) {
+			if(sectionData.get(i).isNew == false) {
+				originals.add(i);
+			}
+		}
+		
+		targets = createTargets();
+		
+		while(originals.isEmpty() == false) {
+			
+			for(int i=0; i< originals.size(); i++) {
+				//writes the original sections
+				
+				System.out.println(originals.get(i));
+
+				int sectionIndex = originals.get(i);
+				EncodingSection es = sectionData.get(sectionIndex);
+				
+				if(es.isNew && noInterfere(targets.get(sectionIndex))) {
+					writeOriSection(i);
+					es.isWritten = true;
+					originals.remove(i);
+				}
+			}
+		}
+		
+		for(int i=0; i< sectionData.size(); i++) {
+			if(sectionData.get(i).isNew == true) {
+				//write the new sections
+				writeNewSection(i);
+			}
+		}
+		
+		//transfer the simulation back to the string
+		memory = new String(memorySim);
+		
+		//reset setcionData
+		sectionData.clear();
+		sectionData.add(new EncodingSection(0,memory.length(),findCharCount(memory)));
+	}
+	
+	private ArrayList<Target> createTargets() {
+		ArrayList<Target> targets = new ArrayList<Target>();
+		
+		int currIndex = 0;
+		for(int i=0; i<sectionData.size(); i++) {
+			EncodingSection es = sectionData.get(i);
+			
+			Target t = new Target(currIndex, currIndex + es.binaryLength - 1, es.isNew);
+			
+			targets.add(t);
+			currIndex += es.binaryLength;
+		}
+		return targets;
+	}
+	
+	private class Target{
+		
+		int targetStart;
+		int targetEnd;
+		
+		public Target(int ts, int tt, boolean in) {
+			targetStart = ts;
+			targetEnd = tt;
+		}
+	}
+	
+	private boolean noInterfere(Target t) {
+		int left = t.targetStart;
+		int right = t.targetEnd;
+		for(int i=0; i< originals.size(); i++) {
+			EncodingSection es = sectionData.get(originals.get(i));
+			
+			int endLocation = es.startLocation + es.binaryLength - 1;
+			
+			if(!es.isWritten && es.isNew && left <= es.startLocation && es.startLocation <= right) {
+				return false;
+			}else if(!es.isWritten && es.isNew && left <= endLocation && endLocation <= right) {
+				return false;
+			}
+//			System.out.println("noInterfere");
+		}
+		return true;
+	}
+	
+	private void writeOriSection(int index) {
+		
+		EncodingSection es = sectionData.get(index);
+		
+		int tarLocation = targets.get(index).targetStart;
+		
+		for(int i=0; i<es.binaryLength; i++) {
+			// writes to memory
+			int head = tarLocation + i;
+			char data = memorySim[es.startLocation + i]; // code fetched from memory
+			memorySim[head] = data;
+		}
+	}
+	
+	private void writeNewSection(int index) {
+		EncodingSection es = sectionData.get(index);
+		
+		int tarLocation = targets.get(index).targetStart;
+		String content = es.content;
+		
+		String temp = "";
+		
+		for(int i=0; i<content.length(); i++) {
+			//convert to Huffman code
+			temp += table.get(content.charAt(i));
+		}
+		
+		for(int i=0; i<es.binaryLength; i++) {
+			// writes to memory
+			int head = tarLocation + i;
+			char data = temp.charAt(i);
+			memorySim[head] = data;
+		}
+		
+	}
+	
+	
+	private void outputToFile() throws FileNotFoundException {
+	    PrintWriter out = new PrintWriter(outputText);
+	    out.print(memory);
+	    out.close();
 	}
 	
 	private void efficiencyReport(){

@@ -1,6 +1,7 @@
 package helpers;
 
 public class EncodingSection {
+	public boolean isWritten;
 	public boolean isNew;
 	public String content;
 	public int startLocation;
@@ -8,6 +9,7 @@ public class EncodingSection {
 	public int charCount;
 	
 	public EncodingSection(int sl, int l, int cc) {
+		isWritten = false;
 		isNew = false;
 		startLocation = sl;
 		binaryLength = l;
@@ -15,6 +17,7 @@ public class EncodingSection {
 	}
 	
 	public EncodingSection(String s, int bl) {
+		isWritten = false;
 		isNew = true;
 		content = s;
 		binaryLength = bl;

@@ -11,7 +11,8 @@ public class Edit {
 	public int location; // the location of the edit
 	public char command; // the type of edit
 	public String content; // the inserted text, if not a delete command
-	public int length; // the length of the inserted text or deleted text
+	public int deleteLength; // the length of the deleted section for replace or delete
+	public int length; // the length of the inserted text
 	String input; // the original input string that created this object
 	
 	public Edit(String in) {
@@ -38,6 +39,9 @@ public class Edit {
 			isWord = true;
 			command = sc.next().charAt(0);
 			location = sc.nextInt();
+			if(sc.hasNextInt()) {
+				deleteLength = sc.nextInt();
+			}
 			if(sc.hasNext()) {
 				content = sc.next();
 			}
